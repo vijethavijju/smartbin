@@ -1,0 +1,103 @@
+#include<SoftwareSerial.h>
+SoftwareSerial mySerial(2,3);
+int push=13;//push_button
+int m1_1=12;//motor1
+int m1_2=11;
+int m2_1=10;//motor2
+int m2_2=9;
+int trig=8;//sensor
+int echo=7;
+void setup() {
+  pinMode(push,INPUT);
+  pinMode(m1_1,OUTPUT);
+  pinMode(m1_2,OUTPUT);
+  pinMode(m2_1,OUTPUT);
+  pinMode(m2_2,OUTPUT);
+  pinMode(trig,OUTPUT);
+  pinMode(echo,INPUT);
+  Serial.begin(9600);
+  mySerial.begin(9600);
+
+}
+int count=0,first,second,sensor_output,len,push_val;
+void loop() {
+  push_val=digitalRead(push);
+  if(push_val==HIGH)
+  {
+    Serial.println("push button pressed");
+    digitalWrite(m1_1,HIGH) ;
+    digitalWrite(m1_2,LOW) ;
+    digitalWrite(m1_1,LOW) ;
+    digitalWrite(m1_2,LOW) ;
+    delay(2000);
+    digitalWrite(m1_1,LOW) ;
+    digitalWrite(m1_2,HIGH) ;
+    delay(2000);
+    digitalWrite(m1_1,LOW) ;
+    digitalWrite(m1_2,LOW) ;
+    digitalWrite(m2_1,HIGH) ;
+    digitalWrite(m2_2,LOW) ;
+    first=sensor();
+    Serial.println("reading sensor value");
+    while(1)
+    {
+      second=sensor();
+      count++;
+    if(first==second)
+    {
+    Serial.println("got equal values");
+    int res=count;
+    digitalWrite(m2_1,LOW) ;
+    digitalWrite(m2_2,HIGH) ;
+    delay(res);
+    if(second=200)
+    {
+      Serial.println("sending alert message");
+      SendTextMessage();
+      break;
+    }
+    }
+    else{
+      Serial.println("swapping values");
+      first=second;
+    }
+  push_val=digitalRead(push);
+  if(push_val==HIGH)
+  {
+    Serial.println("push button pressed again");
+    digitalWrite(m2_1,LOW) ;
+    digitalWrite(m2_2,HIGH) ;
+    delay(1000);
+   break;
+  }
+  }
+    }
+  
+  
+
+}
+int sensor()
+{
+  digitalWrite(trig, LOW);
+  delay(500);
+  digitalWrite(trig, HIGH);
+  delay(500);
+  digitalWrite(trig, LOW);
+  sensor_output = pulseIn(echo, HIGH);
+  len=(sensor_output/2)/74;
+  return len;
+}
+
+void SendTextMessage()
+{
+  Serial.println("sending message");
+  mySerial.println("AT+CMGF=1");   
+  delay(1000);
+  mySerial.println("AT+CMGS=\"+91**********\"\r");
+  delay(1000);
+  mySerial.println("BIN filled with area code=****");
+  delay(200);
+  mySerial.println((char)26);
+  delay(1000);
+  Serial.println("message sent");
+}
